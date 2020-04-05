@@ -59,7 +59,11 @@ num2Tm n =
 		else TmZero
 
 parseIsZero :: Parser Term
-parseIsZero =  string "zero?" >> return TmIsZero
+parseIsZero =  do
+  string "zero?" 
+  many space
+  t <- parseTerm
+  return $ TmIsZero t
 
 parseIf :: Parser Term
 parseIf = do
@@ -71,18 +75,25 @@ parseIf = do
   space
   t2 <- parseTerm
   space
+  string "else"
+  space
   t3 <- parseTerm
-  retun $ TmIf t1 t2 t3
+  return $ TmIf t1 t2 t3
 
 
 parsePred :: Parser Term
-parsePred =  string "pred" >> return TmPred
+parsePred =  do
+  string "pred" 
+  space
+  t <- parseTerm
+  return $ TmPred t
 
 
 parseTerm :: Parser Term
 parseTerm = 
     parseTrue  <|>
     parseFalse <|>
+    parsePred  <|>
     parseInt   <|>
     parseIf    <|>
     parseIsZero<|>
@@ -92,3 +103,9 @@ main =do
   parseTest parseTerm "True"
   parseTest parseTerm "False"
   parseTest parseTerm "3"
+  parseTest parseTerm "pred 3"
+  parseTest parseTerm "if 3 then True else False"
+  parseTest parseTerm "zero? 0"
+  parseTest parseTerm "zero? pred (3)"
+
+
