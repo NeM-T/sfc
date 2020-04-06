@@ -42,13 +42,13 @@ eval1 t = case t of
 
 ----------------------------------------------------
 
-parseTrue :: Parser Term
+parseTrue :: Parser Term 
 parseTrue =  string "True" >> return TmTrue
 
-parseFalse :: Parser Term
+parseFalse :: Parser Term 
 parseFalse =  string "False" >> return TmFalse
 
-parseInt :: Parser Term
+parseInt :: Parser Term 
 parseInt =  do
   x <- many1 digit
   return (num2Tm (read x :: Int))
@@ -58,7 +58,7 @@ num2Tm n =
        if n > 0 then (TmSucc (num2Tm (n - 1)))
 		else TmZero
 
-parseIsZero :: Parser Term
+parseIsZero :: Parser Term 
 parseIsZero =  do
   string "zero?" 
   many space
@@ -81,7 +81,7 @@ parseIf = do
   return $ TmIf t1 t2 t3
 
 
-parsePred :: Parser Term
+parsePred :: Parser Term 
 parsePred =  do
   string "pred" 
   space
@@ -99,6 +99,16 @@ parseTerm =
     parseIsZero<|>
      between (string "(") (string ")") parseTerm
 
+-------------------------------------------
+
+
+interp = do
+  tm <- getLine
+  if tm == "" then return TmErro
+	     else do
+		parseTest parseTerm tm
+		interp
+
 main =do 
   parseTest parseTerm "True"
   parseTest parseTerm "False"
@@ -107,5 +117,4 @@ main =do
   parseTest parseTerm "if 3 then True else False"
   parseTest parseTerm "zero? 0"
   parseTest parseTerm "zero? pred (3)"
-
-
+  interp
