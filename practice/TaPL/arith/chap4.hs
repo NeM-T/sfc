@@ -89,10 +89,18 @@ parsePred =  do
   return $ TmPred t
 
 
+parseSucc :: Parser Term 
+parseSucc =  do
+  string "succ" 
+  space
+  t <- parseTerm
+  return $ TmSucc t
+
 parseTerm :: Parser Term
 parseTerm = 
     parseTrue  <|>
     parseFalse <|>
+    parseSucc  <|>
     parsePred  <|>
     parseInt   <|>
     parseIf    <|>
