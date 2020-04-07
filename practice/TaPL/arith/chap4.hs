@@ -109,12 +109,15 @@ parseTerm =
 
 -------------------------------------------
 
+apply = do
+  t <- parseTerm
+  return $ eval t
 
 interp = do
   tm <- getLine
   if tm == "" then return TmErro
 	     else do
-		parseTest parseTerm tm
+		parseTest apply tm
 		interp
 
 main =do 
