@@ -1,3 +1,4 @@
+import Data.Char
 import Text.Parsec
 import Text.Parsec.String
 
@@ -105,13 +106,11 @@ parseTerm =
     parseInt   <|>
     parseIf    <|>
     parseIsZero<|>
-     between (string "(") (string ")") parseTerm
+    between (string "(") (string ")") parseTerm
 
 -------------------------------------------
 
-apply = do
-  t <- parseTerm
-  return $ eval t
+apply = eval <$> parseTerm
 
 interp = do
   tm <- getLine
