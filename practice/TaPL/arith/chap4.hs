@@ -21,7 +21,7 @@ isval t       = isnumericval t
 isnumericval :: Term -> Bool
 isnumericval TmZero      = True
 isnumericval (TmSucc t1) = isnumericval t1
-_                        = False
+isnumericval _           = False
 
 eval :: Term -> Term
 eval t = if isval t 
@@ -30,8 +30,9 @@ eval t = if isval t
 
 eval1 :: Term -> Term
 eval1 t = case t of
-	      TmIf TmTrue t2 _      ->  t2
-	      TmIf TmFalse _ t3     ->  t3
+	      TmIf TmTrue t2 _      -> t2
+	      TmIf TmFalse _ t3     -> t3
+	      TmSucc t1             -> if isnumericval t1 then TmSucc t1 else TmErro
 	      TmIf t1 t2 t3         -> TmIf (eval t1) t2 t3
 	      TmPred TmZero 	    ->  TmZero
 	      TmPred (TmSucc nv1)   -> if isnumericval nv1 then  nv1 
@@ -97,6 +98,10 @@ parseSucc =  do
   t <- parseTerm
   return $ TmSucc t
 
+
+parseZero :: Parser Term
+parseZero = string "Zero" >> return TmZero
+
 parseTerm :: Parser Term
 parseTerm = 
     parseTrue  <|>
@@ -106,6 +111,7 @@ parseTerm =
     parseInt   <|>
     parseIf    <|>
     parseIsZero<|>
+    parseZero  <|>
     between (string "(") (string ")") parseTerm
 
 -------------------------------------------
