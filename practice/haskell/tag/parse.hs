@@ -22,8 +22,11 @@ string str target = do
 		      else "Error"
 
 main = do 
-    text <- readFile "config.toml"
-    putStr text
+    handle <- openFile "config.toml" ReadMode
+    text <- hGetLine handle
+    putStr $ text ++ "\n"
+    line2 <- hGetLine handle
+    putStr $ line2 ++ "\n"
     print $ anyChar text
     print $ end text
     print $ string "[ro" text
