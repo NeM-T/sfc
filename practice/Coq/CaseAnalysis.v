@@ -155,7 +155,7 @@ Inductive bin : Type :=
 Fixpoint incr (m:bin) : bin :=
   match m with
   | Z => B Z
-  | B m' => A ( B m')
+  | B m' => A ( incr m')
   | A m' => B m'
   end.
 
@@ -165,15 +165,5 @@ Example test_inc2: (incr (B Z)) = A (B Z).
 Proof. simpl. reflexivity. Qed.
 Example test_inc3: (incr (A (B (B Z)))) = B (B (B Z)).
 Proof. simpl. reflexivity. Qed.
-
-
-(*
-Fixpoint bin_to_nat (m:bin) : nat :=
-  match m with
-  | Z => O
-  | B Z => S O
-  | A m' => S (  )
-  | B m' => 
-  end.
-*)
-
+Example test_inc4: (incr (B (B (B Z)))) = A(A (A (B Z))).
+Proof. simpl. reflexivity. Qed.
