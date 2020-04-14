@@ -209,7 +209,7 @@ Fixpoint nth_error {X : Type} (l : list X) (n : nat)
                    : option X :=
   match l with
   | [] => None
-  | a :: l' => if n =? O then Some a else nth_error l' (pred n)
+  | a :: l' => if n == O then Some a else nth_error l' (pred n)
   end.
 
 Example test_nth_error1 : nth_error [4;5;6;7] 0 = Some 4.

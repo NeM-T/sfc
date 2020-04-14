@@ -103,15 +103,8 @@ Inductive nybble : Type :=
 
 Check (bits B1 B0 B1 B0).
 
-Module NatPlayground.
   (* With this definition, 0 is represented by O, 1 by S O, 2 by S (S O), and so on. *)
-  Inductive nat : Type :=
-    | O
-    | S (n : nat).
 
-End NatPlayground.
-
-Module NatPlayground2.
 
   Fixpoint mult (n m : nat) : nat :=
     match n with
@@ -210,7 +203,4 @@ Fixpoint eqb (n m : nat) : bool :=
   Proof. simpl. reflexivity. Qed.
   Example test_ltb3: (4 <? 2) = false.
   Proof. simpl. reflexivity. Qed.
-
-
-End NatPlayground2.
 
