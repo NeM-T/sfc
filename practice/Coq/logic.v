@@ -845,7 +845,15 @@ Definition implies_to_or := forall P Q:Prop,
   (P->Q) -> (~P\/Q).
 
 
-
+Lemma In_app_iff : forall A l l' (a:A),
+  In a (l++l') <-> In a l \/ In a l'.
+Proof.
+  intros. split. induction l.
+  - simpl. intros. right. apply H.
+  - simpl. induction l'.
+      + simpl. rewrite app_nil_r. rewrite app_nil_r in IHl. simpl in IHl. intros. left. apply H.
+      + simpl. simpl in IHl. intros.
+Admitted.
 
 (*
 Theorem or_distributes_over_and_2 : forall P Q R : Prop,
@@ -859,14 +867,7 @@ Proof.
     + right.  Search and. apply (proj2 Q R).  apply H.
 
 
-Lemma In_app_iff : forall A l l' (a:A),
-  In a (l++l') <-> In a l \/ In a l'.
-Proof.
-  intros. split. induction l.
-  - simpl. intros. right. apply H.
-  - simpl. induction l'.
-      + simpl. rewrite app_nil_r. rewrite app_nil_r in IHl. simpl in IHl. intros. left. apply H.
-      + simpl. simpl in IHl. intros.   
+
 
 
 Lemma All_In :
@@ -886,5 +887,5 @@ Proof.
  apply proj2 with (P h ). Search and. in H.  apply H. inversion H.
       inversion H0. apply or_intro in H. inversion H. rewrite H1 in H2.
       apply H2. 
-      destruct H as [PH | APT].
+      destruct H as [PH | APT].*)
 
