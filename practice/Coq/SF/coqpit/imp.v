@@ -1035,6 +1035,6 @@ Theorem ceval_deterministic: forall (c:com) st st1 st2 s1 s2,
      st =[ c ]=> st2 / s2 ->
      st1 = st2 /\ s1 = s2.
 Proof.
-  intros. inversion H. inversion H0. split. subst. reflexivity. reflexivity.Qed.
+  intros. inversion H. inversion H0. split. subst. reflexivity. reflexivity. Qed.
 
 End BreakImp.
