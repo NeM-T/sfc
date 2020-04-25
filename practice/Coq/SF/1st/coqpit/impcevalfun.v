@@ -1,6 +1,5 @@
 From Coq Require Import omega.Omega.
 From Coq Require Import Arith.Arith.
-Add LoadPath  "./".
 Require Import imp maps.
 
 Open Scope imp_scope.

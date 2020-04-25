@@ -1,4 +1,3 @@
-Add LoadPath "./".
 Set Warnings "-notation-overridden,-parsing".
 From Coq Require Import Strings.String.
 From Coq Require Import Strings.Ascii.
@@ -33,6 +32,7 @@ Definition isAlpha (c : ascii) : bool :=
 Definition isDigit (c : ascii) : bool :=
   let n := nat_of_ascii c in
      andb (48 <=? n) (n <=? 57).
+
 
 Inductive chartype := white | alpha | digit | other.
 

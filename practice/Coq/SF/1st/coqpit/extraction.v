@@ -3,7 +3,6 @@ Extraction Language OCaml.
 From Coq Require Import Arith.Arith.
 From Coq Require Import Init.Nat.
 From Coq Require Import Arith.EqNat.
-Add LoadPath "./".
 Require Import impcevalfun.
 
 Extraction "imp1.ml" ceval_step.

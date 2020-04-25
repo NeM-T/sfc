@@ -1,6 +1,5 @@
 Set Warnings "-notation-overridden,-parsing".
 From Coq Require Import omega.Omega.
-Add LoadPath "./".
 Require Import maps.
 Require Import imp.
 
