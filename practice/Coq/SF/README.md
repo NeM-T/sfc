@@ -1,10 +1,6 @@
 # Coq
-[論理の基礎](https://www.chiguri.info/sfja/lf/)をやる。  
-CoqIDEおよび、neovimに[coqpit.vim](https://github.com/LumaKernel/coqpit.vim)を入れて用いている。  
-~~coqpitはrewriteがうまくいかないので該当する部分がある場合にCoqIDEをつかいます。~~  
-できるようになったのでCoqIDEを使う必要はないかもしれないが、coqpitは`From LF Require Export`ができず、`Require Import`にする必要があるが、色々面倒なのでCoqIDEを使う。  
-coqpitディレクトリにはMAPS以降の章で以前の章との依存関係のないcoqpitで動くものを入れていきます。。  
-~~spacemacsとProof Generalでやりはじめました。いい感じだったらこっちにします。~~ spacemacs+PG+company-coqですごくいい感じです。おすすめ  
+~~[論理の基礎](https://www.chiguri.info/sfja/lf/)~~ [Software Foundations](https://www.chiguri.info/sfja/index.html)をやる。  
+spacemacs+PG+company-coqの環境がすごくいい感じです。おすすめ  
 
 
 intros: 仮説や変数をゴールからコンテキストに移動させる  
