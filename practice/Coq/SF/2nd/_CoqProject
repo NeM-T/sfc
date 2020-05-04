@@ -3,3 +3,4 @@
 ./equiv.v
 ./hoare.v
 ./hoareaslogic.v
+./smallstep.v
