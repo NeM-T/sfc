@@ -4,3 +4,4 @@
 ./hoare.v
 ./hoareaslogic.v
 ./smallstep.v
+./types.v
