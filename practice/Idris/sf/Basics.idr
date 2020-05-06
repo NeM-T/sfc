@@ -112,6 +112,51 @@ plus_1_S n = Refl
 mult_0_1 : (n: Nat) -> 0 * n = 0
 mult_0_1 n = Refl
 
--- p.21 Proof by Rewriting
 plus_id_exaple : (n, m: Nat) -> (n = m) -> n + n = m + m
 plus_id_exaple n m prf = rewrite prf in Refl
+
+plus_id_exercise : (n, m, o : Nat) -> (n = m) -> (m = o)  -> n + m = m + o
+plus_id_exercise n m o h h1 = rewrite h in rewrite h1 in Refl
+
+mult_S_1 : (n, m: Nat) -> (m = S n) -> m * (1 + n) = m * m
+mult_S_1 n m prf = ?mult_S_1_rhs -- proof hool (後回しにする)
+mult_S_1_rhs n m prf = rewrite prf in Refl
+
+
+plus_1_neq_0_firsttry : (n: Nat) -> (n + 1) == 0 = False
+plus_1_neq_0_firsttry Z = Refl
+plus_1_neq_0_firsttry (S n) = Refl
+
+not_involutive : (b: Bool) -> not (not b) = b
+not_involutive True  = Refl
+not_involutive False = Refl
+
+andb_commutative : (b, c: Bool) -> b && c = c && b
+andb_commutative True True   = Refl
+andb_commutative True False  = Refl
+andb_commutative False True  = Refl
+andb_commutative False False = Refl
+
+andb_true_elim_2 : (b, c: Bool) -> (b && c = True) -> c = True
+andb_true_elim_2 True True prf = Refl
+
+
+zero_nbeq_plus_1 : (n: Nat) -> 0 == (n + 1) = False
+zero_nbeq_plus_1    Z  = Refl
+zero_nbeq_plus_1 (S n) = Refl
+
+identity_fn_applied_twice :
+  (f: Bool -> Bool) -> ((x: Bool) -> f x = x) -> (b: Bool) -> f (f b)  = b
+identity_fn_applied_twice f h b = ?id_tw
+
+
+---------- Proofs ----------
+id_tw = proof
+  intros
+  rewrite h b
+  rewrite h (f b)
+  trivial
+
+andb_eq_orb : (b, c: Bool) -> (b && c = b || c) -> b = c
+andb_eq_orb True True h = Refl
+andb_eq_orb False False h = Refl
