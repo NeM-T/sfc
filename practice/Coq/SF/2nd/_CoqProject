@@ -5,3 +5,4 @@
 ./hoareaslogic.v
 ./smallstep.v
 ./types.v
+./stlc.v
