@@ -6,3 +6,4 @@
 ./smallstep.v
 ./types.v
 ./stlc.v
+./stlcprop.v
