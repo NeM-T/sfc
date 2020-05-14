@@ -2,7 +2,9 @@
 ~~[論理の基礎](https://www.chiguri.info/sfja/lf/)~~ [Software Foundations](https://www.chiguri.info/sfja/index.html)をやる。  
 spacemacs+PG+company-coqの環境がすごくいい感じです。おすすめ  
 
+Coqはversion 8.11.0 を使用しています。  
 
+### tactics
 intros: 仮説や変数をゴールからコンテキストに移動させる  
 reflexivity: 反射的に証明を終わらせる（ゴールがe=eのように見えるとき  
 apply: 仮説、リーマ、コンストラクターを使って目標を証明する。  
