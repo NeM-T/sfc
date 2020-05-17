@@ -8,3 +8,4 @@
 ./stlc.v
 ./stlcprop.v
 ./morestlc.v
+./sub.v
