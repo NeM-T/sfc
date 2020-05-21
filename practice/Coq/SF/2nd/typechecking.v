@@ -514,14 +514,14 @@ Fixpoint stepf (t : tm) : option tm :=
   | app t1 t2 =>
     match stepf t1 with
     | Some t1' => return app t1' t2
-    | _ => match stepf t2 with
-          | Some t2' => return app t1 t2'
-          | _ => if value_bool t2 then match t1 with
-                                      | abs x T11 t12 => return [x := t2] t12
-                                      | _ => fail
-                                      end
-                else fail
-          end
+    | _ => if value_bool t1 then match stepf t2 with
+                                | Some t2' => return app t1 t2'
+                                | _ => if value_bool t2 then match t1 with
+                                                            | abs x T11 t12 => return [x := t2] t12
+                                                            | _ => fail
+                                                            end
+                                       else fail
+                                 end else fail
     end
   | scc t1 =>
     match t1 with
@@ -566,22 +566,26 @@ Fixpoint stepf (t : tm) : option tm :=
     match stepf t0 with
     | Some t0' => return tcase t0' x1 t1 x2 t2
     | _ => match t0 with
-           | tinl T v0 => match stepf v0 with
-                          | None => return [x1:= v0] t1
-                          | _ => fail
-                          end
-           | tinr T v0 => match stepf v0 with
-                          | None => return [x2:= v0] t2
-                          | _ => fail
-                          end
+           | tinl T v0 => if value_bool v0 then
+                            match stepf v0 with
+                            | None => return [x1:= v0] t1
+                            | _ => fail
+                            end else fail
+           | tinr T v0 => if value_bool v0 then
+                            match stepf v0 with
+                            | None => return [x2:= v0] t2
+                            | _ => fail
+                          end else fail
            | _ => fail
            end
     end
   | tcons t1 t2 =>
     match stepf t1 with
     | Some t1' => return tcons t1' t2
-    | _ => t2' <- stepf t2;;
-          return tcons t1 t2'
+    | _ => if value_bool t1 then
+             t2' <- stepf t2;;
+             return tcons t1 t2'
+           else fail
     end
   | tlcase t1 t2 x1 x2 t3 =>
     match stepf t1 with
@@ -603,18 +607,20 @@ Fixpoint stepf (t : tm) : option tm :=
   | fst t =>
     match stepf t with
     | Some t' => return fst t'
-    | _ => match t with
-          | pair t1 t2 => return t1
-          | _ => fail
-          end
+    | _ => if value_bool t then
+             match t with
+            | pair t1 t2 => return t1
+            | _ => fail
+            end else fail
     end
   | snd t =>
     match stepf t with
     | Some t' => return snd t'
-    | _ => match t with
-          | pair t1 t2 => if value_bool t then return t2 else fail
-          | _ => fail
-          end
+    | _ => if value_bool t then
+             match t with
+            | pair t1 t2 => return t2
+            | _ => fail
+            end else fail
     end
   | tlet x t1 t2 =>
     match stepf t1 with
@@ -638,20 +644,99 @@ Proof with eauto.
   induction t; intros; try solve_by_invert; try reflexivity.
   simpl. inversion H. apply IHt in H1. rewrite H1. reflexivity.
   simpl. inversion H. apply IHt in H1. rewrite H1. reflexivity.
-  simpl. inversion H. apply andb_true_iff in H1; inversion H1. apply IHt1 in H0. apply IHt2 in H2... rewrite H0. rewrite H2. reflexivity.
+  simpl. inversion H. apply andb_true_iff in H1; inversion H1. apply IHt1 in H0. apply IHt2 in H2... rewrite H0. rewrite H2. destruct (value_bool t1)...
   simpl. inversion H. apply andb_true_iff in H1; inversion H1. apply IHt1 in H0; apply IHt2 in H2. rewrite H0. rewrite H2. destruct (value_bool t1); reflexivity.
 Qed.
 
+Theorem value_bool_false : forall t,
+    value_bool t = false <-> not (value t).
+Proof.
+  split.
+  -
+    induction t; intros; intro H1; try solve_by_invert;
+     try (apply value_bool_correct in H1; rewrite H1 in H; inversion H).
+  -
+    intros. induction t; try reflexivity;
+    try (apply IHt; intros H1; apply H; constructor; assumption).
+
+    try( induction H; constructor).
+    induction H; constructor.
+    induction H; constructor.
+    simpl. apply andb_false_iff. unfold not in H. destruct (value_bool t1) eqn:IH1. destruct (value_bool t2) eqn: IH2. apply value_bool_correct in IH1. apply value_bool_correct in IH2. induction H; constructor; assumption.
+    right. reflexivity. left. reflexivity.
+    induction H; constructor.
+    simpl. apply andb_false_iff. unfold not in H. destruct (value_bool t1) eqn:IH1. destruct (value_bool t2) eqn: IH2. apply value_bool_correct in IH1. apply value_bool_correct in IH2. induction H; constructor; assumption.
+    right. reflexivity. left. reflexivity.
+Qed.
 
 
 Theorem sound_stepf : forall t t',
     stepf t = Some t' -> t --> t'.
 Proof with eauto.
   induction t; intros; try solve_by_invert.
-Admitted.
-
-
-
+  - (*app*)
+    inversion H.
+    destruct (stepf t1); inversion H1. constructor. apply IHt1...
+    destruct (value_bool t1) eqn: IH1. destruct (stepf t2); inversion H2. constructor.
+    apply value_bool_correct... apply IHt2...
+    destruct (value_bool t2) eqn: IH2.
+    destruct t1; inversion H1. constructor. apply value_bool_correct...
+    inversion H1. inversion H1.
+  -
+    inversion H. destruct (stepf t) eqn: IH1; destruct t; try (inversion H1; constructor; apply IHt; reflexivity).
+  -
+    inversion H. destruct (stepf t) eqn: IH1; destruct t; try (inversion H1; constructor; apply IHt; reflexivity).
+  -
+    inversion H. destruct (stepf t1) eqn:IH1. inversion H1. constructor. apply IHt1. reflexivity.
+    destruct (stepf t2) eqn: IH2; destruct (value_bool t1) eqn:IH3; inversion H1. constructor.  apply value_bool_correct in IH3. assumption. apply IHt2. reflexivity.
+    destruct t1; inversion H2. destruct t2; try solve_by_invert. inversion H1. constructor.
+  -
+    inversion H. destruct (stepf t1) eqn: IH2. destruct t1 eqn: IH; inversion H1; try constructor; try apply IHt1...
+    destruct n eqn: IH1; inversion H1; constructor.
+    destruct t1; try solve_by_invert.
+    destruct n; inversion H1;  constructor.
+  -
+    inversion H. destruct (stepf t0); try solve_by_invert. inversion H1. constructor. apply IHt...
+  -
+    inversion H. destruct (stepf t0); try solve_by_invert. inversion H1. constructor. apply IHt...
+  - (*tcase*)
+    inversion H. destruct (stepf t1). inversion H1. constructor. apply IHt1...
+    destruct t1 eqn: IH; try solve_by_invert. destruct (stepf t0); inversion H1.
+    destruct (value_bool t0) eqn:IH0; inversion H1.
+    destruct (value_bool t0) eqn:IH0; inversion H1. constructor. apply value_bool_correct...
+    destruct (value_bool t0) eqn:IH0; inversion H1.
+    destruct (stepf t0); inversion H1. constructor. apply value_bool_correct...
+  - (*tcons*)
+    inversion H. destruct (stepf t1). inversion H1. constructor. apply IHt1...
+    destruct (stepf t2). inversion H1.
+    destruct (value_bool t1) eqn:IH; inversion H1. constructor. apply value_bool_correct... apply IHt2...
+    destruct (value_bool t1) eqn:IH; inversion H1. 
+  -
+    inversion H. destruct (stepf t1). inversion H1. constructor. apply IHt1...
+    destruct t1; try solve_by_invert. inversion H1. constructor.
+    destruct (value_bool t1_1) eqn: IH1; inversion H1. destruct (value_bool t1_2) eqn:IH2; inversion H2;
+                                                         constructor; apply value_bool_correct...
+  -
+    inversion H. destruct (stepf t1). inversion H1; constructor. apply IHt1...
+    destruct (value_bool t1) eqn:IH1. destruct (stepf t2); inversion H1. constructor. apply value_bool_correct...
+    apply IHt2... inversion H1.
+  - (*fst*)
+    inversion H. destruct (stepf t); inversion H1. constructor. apply IHt...
+    destruct (value_bool t) eqn: IH; inversion H1.
+    destruct t; try solve_by_invert. inversion H1. constructor. apply value_bool_correct... rewrite <- H4...
+  - (*snd*)
+    inversion H. destruct (stepf t); inversion H1. constructor. apply IHt...
+    destruct (value_bool t) eqn: IH; inversion H1.
+    destruct t; try solve_by_invert. inversion H1. constructor. apply value_bool_correct... rewrite <- H4...
+  -
+    inversion H. destruct (stepf t1); inversion H1. constructor. apply IHt1...
+    destruct (value_bool t1) eqn: IH; inversion H1. constructor. apply value_bool_correct...
+  -
+    inversion H. destruct (stepf t). inversion H1. constructor. apply IHt...
+    destruct t; inversion H1. constructor.
+Qed.
+    
+    
 Theorem complete_stepf : forall t t',
     t --> t' -> stepf t = Some t'.
 Proof.
@@ -659,15 +744,15 @@ Proof.
  
   - apply value_bool_correct in H. rewrite H. apply value_stepf in H. rewrite H. reflexivity.
   -
-    rewrite IHstep. apply value_bool_correct in H. apply value_stepf in H. rewrite H. reflexivity.
+    rewrite IHstep. apply value_bool_correct in H. rewrite H. apply value_stepf in H. rewrite H. reflexivity.
   -
     rewrite IHstep. apply value_bool_correct in H. rewrite H. apply value_stepf in H. rewrite H. reflexivity.
   -
-    apply value_bool_correct in H. apply value_stepf in H. rewrite H. reflexivity.
+    apply value_bool_correct in H. rewrite H. apply value_stepf in H. rewrite H. reflexivity.
   -
-    apply value_bool_correct in H. apply value_stepf in H. rewrite H. reflexivity.
+    apply value_bool_correct in H. rewrite H. apply value_stepf in H. rewrite H. reflexivity.
   -
-    rewrite IHstep. apply value_bool_correct in H; apply value_stepf in H; rewrite H; reflexivity.
+    rewrite IHstep. apply value_bool_correct in H; rewrite H; apply value_stepf in H; rewrite H; reflexivity.
   -
     apply value_bool_correct in H; rewrite H; apply value_stepf in H; rewrite H. 
     apply value_bool_correct in H0; rewrite H0; apply value_stepf in H0; rewrite H0. reflexivity.
@@ -681,17 +766,14 @@ Proof.
     apply value_bool_correct in H; rewrite H; apply value_stepf in H; rewrite H. reflexivity.
   -
     inversion H. apply value_bool_correct in H2; rewrite H2; apply value_stepf in H2; rewrite H2.
-    apply value_bool_correct in H3; apply value_stepf in H3; rewrite H3. reflexivity.
+    apply value_bool_correct in H3; rewrite H3; apply value_stepf in H3; rewrite H3. reflexivity.
   -
     inversion H. apply value_bool_correct in H2; rewrite H2; apply value_stepf in H2; rewrite H2.
     apply value_bool_correct in H3; rewrite H3; apply value_stepf in H3; rewrite H3. reflexivity.
+
   -
     apply value_bool_correct in H; rewrite H; apply value_stepf in H. rewrite H. reflexivity.
 Qed.
-
-
-
-
 
 End StepFunction.
 
