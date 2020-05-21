@@ -9,3 +9,4 @@
 ./stlcprop.v
 ./morestlc.v
 ./sub.v
+./typechecking.v

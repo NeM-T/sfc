@@ -198,7 +198,6 @@ Notation Float := (Base "Float").
 Notation Integer := (Base "Integer").
 
 
-Module Exaple.
 Example subtyping_example_0 :
   (Arrow C Bool) <: (Arrow C Top).
 Proof. auto. Qed.
@@ -231,7 +230,7 @@ Proof with eauto.
   constructor; constructor. Qed.
 
 
-End Exaple.
+End Examples.
 
 Definition context := partial_map ty.
 
