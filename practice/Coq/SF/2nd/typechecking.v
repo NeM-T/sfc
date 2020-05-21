@@ -480,19 +480,218 @@ Module StepFunction.
 Import morestlc.
 Import STLCExtended.
 
-(* Fixpoint stepf (t : tm) : option tm := *)
-  (* match t with *)
-  (* end *)
-  (* . Admitted. *)
+Fixpoint value_bool (t: tm) : bool :=
+  match t with
+  | abs _ _ _ => true
+  | const _ => true
+  | tinl T v => value_bool v
+  | tinr T v => value_bool v
+  | tnil _ => true
+  | tcons v1 v2 => andb (value_bool v1) (value_bool v2)
+  | unit => true
+  | pair v1 v2 => andb (value_bool v1) (value_bool v2)
+  | _ =>false
+  end.
 
 
-(* Theorem sound_stepf : forall t t', *)
-(*     stepf t = Some t' -> t --> t'. *)
-(* Proof. Admitted. *)
+Theorem value_bool_correct : forall t,
+    value_bool t = true <-> value t.
+Proof with eauto.
+  split.
+  - unfold value_bool; induction t; intros; try solve_by_invert; try constructor...
+    apply andb_true_iff in H. inversion H...
+    apply andb_true_iff in H. inversion H...
+    apply andb_true_iff in H. inversion H...
+    apply andb_true_iff in H. inversion H...
+  - unfold value_bool; intros H; induction H; try solve_by_invert; try reflexivity.
+    rewrite IHvalue... rewrite IHvalue... rewrite IHvalue1. rewrite IHvalue2...
+    rewrite IHvalue2; rewrite IHvalue1...
+Qed.
 
-(* Theorem complete_stepf : forall t t', *)
-(*     t --> t' -> stepf t = Some t'. *)
-(* Proof. Admitted. *)
+
+Fixpoint stepf (t : tm) : option tm :=
+  match t with
+  | app t1 t2 =>
+    match stepf t1 with
+    | Some t1' => return app t1' t2
+    | _ => match stepf t2 with
+          | Some t2' => return app t1 t2'
+          | _ => if value_bool t2 then match t1 with
+                                      | abs x T11 t12 => return [x := t2] t12
+                                      | _ => fail
+                                      end
+                else fail
+          end
+    end
+  | scc t1 =>
+    match t1 with
+    | const n => return const (S n)
+    | _ => t1' <- stepf t1;;
+          return scc t1'
+    end
+  | prd t1 =>
+    match t1 with
+    | const n => return const (Nat.pred n)
+    | _ => t1' <- stepf t1;;
+          return prd t1'
+    end
+  | mlt t1 t2 =>
+    match stepf t1 with
+    | Some t1' => return mlt t1' t2
+    | _ => if value_bool t1 then
+             match stepf t2 with
+             | Some t2' => return mlt t1 t2'
+             | _ => match t1, t2 with
+                    | const n1, const n2 => return const (n1 * n2)
+                    | _ , _ => fail
+                    end
+             end
+           else fail
+    end
+
+  | test0 t1 t2 t3 =>
+    match t1 with
+    | const 0 => return t2
+    | const (S n) => return t3
+    | _ => t1' <- stepf t1;;
+          return test0 t1' t2 t3
+    end
+  | tinl T t1 =>
+    t1' <- stepf t1;;
+    return tinl T t1'
+  | tinr T t1 =>
+    t1' <- stepf t1;;
+    return tinr T t1'
+  | tcase t0 x1 t1 x2 t2 =>
+    match stepf t0 with
+    | Some t0' => return tcase t0' x1 t1 x2 t2
+    | _ => match t0 with
+           | tinl T v0 => match stepf v0 with
+                          | None => return [x1:= v0] t1
+                          | _ => fail
+                          end
+           | tinr T v0 => match stepf v0 with
+                          | None => return [x2:= v0] t2
+                          | _ => fail
+                          end
+           | _ => fail
+           end
+    end
+  | tcons t1 t2 =>
+    match stepf t1 with
+    | Some t1' => return tcons t1' t2
+    | _ => t2' <- stepf t2;;
+          return tcons t1 t2'
+    end
+  | tlcase t1 t2 x1 x2 t3 =>
+    match stepf t1 with
+    | Some t1' => return tlcase t1' t2 x1 x2 t3
+    | _ => match t1 with
+           | tnil _ => return t2
+           | tcons v1 vl => if (value_bool v1 && value_bool vl) then return [x2:= vl] ([x1:=v1]t3) else fail
+           | _ => fail
+           end
+    end
+  | pair t1 t2 =>
+    match stepf t1 with
+    | Some t1' => return pair t1' t2
+    | _ => if value_bool t1 then
+             t2' <- stepf t2;;
+             return pair t1 t2'
+           else fail
+    end
+  | fst t =>
+    match stepf t with
+    | Some t' => return fst t'
+    | _ => match t with
+          | pair t1 t2 => return t1
+          | _ => fail
+          end
+    end
+  | snd t =>
+    match stepf t with
+    | Some t' => return snd t'
+    | _ => match t with
+          | pair t1 t2 => if value_bool t then return t2 else fail
+          | _ => fail
+          end
+    end
+  | tlet x t1 t2 =>
+    match stepf t1 with
+    | Some t1' => return tlet x t1' t2
+    | _ => if value_bool t1 then return [x := t1] t2 else fail
+    end
+  | tfix t =>
+    match stepf t with
+    | Some t' => return tfix t'
+    | _ => match t with
+           | abs x T t1 => return [x := tfix t]t1
+           | _ => fail
+           end
+    end
+  | _ => None
+  end.
+
+Theorem value_stepf : forall t,
+    value_bool t = true -> stepf t = None.
+Proof with eauto.
+  induction t; intros; try solve_by_invert; try reflexivity.
+  simpl. inversion H. apply IHt in H1. rewrite H1. reflexivity.
+  simpl. inversion H. apply IHt in H1. rewrite H1. reflexivity.
+  simpl. inversion H. apply andb_true_iff in H1; inversion H1. apply IHt1 in H0. apply IHt2 in H2... rewrite H0. rewrite H2. reflexivity.
+  simpl. inversion H. apply andb_true_iff in H1; inversion H1. apply IHt1 in H0; apply IHt2 in H2. rewrite H0. rewrite H2. destruct (value_bool t1); reflexivity.
+Qed.
+
+
+
+Theorem sound_stepf : forall t t',
+    stepf t = Some t' -> t --> t'.
+Proof with eauto.
+  induction t; intros; try solve_by_invert.
+Admitted.
+
+
+
+Theorem complete_stepf : forall t t',
+    t --> t' -> stepf t = Some t'.
+Proof.
+  intros. induction H; simpl; try reflexivity; try (rewrite IHstep; destruct t1; try solve_by_invert; try reflexivity).
+ 
+  - apply value_bool_correct in H. rewrite H. apply value_stepf in H. rewrite H. reflexivity.
+  -
+    rewrite IHstep. apply value_bool_correct in H. apply value_stepf in H. rewrite H. reflexivity.
+  -
+    rewrite IHstep. apply value_bool_correct in H. rewrite H. apply value_stepf in H. rewrite H. reflexivity.
+  -
+    apply value_bool_correct in H. apply value_stepf in H. rewrite H. reflexivity.
+  -
+    apply value_bool_correct in H. apply value_stepf in H. rewrite H. reflexivity.
+  -
+    rewrite IHstep. apply value_bool_correct in H; apply value_stepf in H; rewrite H; reflexivity.
+  -
+    apply value_bool_correct in H; rewrite H; apply value_stepf in H; rewrite H. 
+    apply value_bool_correct in H0; rewrite H0; apply value_stepf in H0; rewrite H0. reflexivity.
+  -
+    apply value_bool_correct in H; rewrite H; apply value_stepf in H; rewrite H. reflexivity.
+  -
+    apply value_bool_correct in H; rewrite H; apply value_stepf in H; rewrite H. reflexivity.
+  -
+    apply value_bool_correct in H; rewrite H; apply value_stepf in H; rewrite H. reflexivity.
+  -
+    apply value_bool_correct in H; rewrite H; apply value_stepf in H; rewrite H. reflexivity.
+  -
+    inversion H. apply value_bool_correct in H2; rewrite H2; apply value_stepf in H2; rewrite H2.
+    apply value_bool_correct in H3; apply value_stepf in H3; rewrite H3. reflexivity.
+  -
+    inversion H. apply value_bool_correct in H2; rewrite H2; apply value_stepf in H2; rewrite H2.
+    apply value_bool_correct in H3; rewrite H3; apply value_stepf in H3; rewrite H3. reflexivity.
+  -
+    apply value_bool_correct in H; rewrite H; apply value_stepf in H. rewrite H. reflexivity.
+Qed.
+
+
+
+
 
 End StepFunction.
 
