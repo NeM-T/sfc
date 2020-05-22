@@ -188,7 +188,7 @@ Definition manual_grade_for_type_checking_complete : option (nat*string) := None
 Import morestlc.
 Import STLCExtended.
 Require Coq.extraction.Extraction.
-Extraction Language Haskell.
+Extraction Language OCaml.
 
 
 Fixpoint eqb_ty (T1 T2 : ty) : bool :=
@@ -635,7 +635,7 @@ Fixpoint stepf (t : tm) : option tm :=
   | _ => None
   end.
 
-Extraction "Typecheck.hs" type_check stepf.
+Extraction "Typecheck.ml" type_check stepf.
 
 Theorem value_stepf : forall t,
     value_bool t = true -> stepf t = None.
