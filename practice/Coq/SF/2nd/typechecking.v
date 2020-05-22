@@ -343,7 +343,6 @@ Fixpoint type_check (Gamma : context) (t : tm) : option ty :=
     end
   end.
 
-Extraction "Typecheck.hs" type_check.
 
 Ltac invert_typecheck Gamma t T :=
   remember (type_check Gamma t) as TO;
@@ -477,14 +476,6 @@ Proof.
 Qed.
 
 
-End TypecheckerExtensions.
-
-
-Module StepFunction.
-Import morestlc.
-Import STLCExtended.
-Require Coq.extraction.Extraction.
-Extraction Language Haskell.
 
 Fixpoint value_bool (t: tm) : bool :=
   match t with
@@ -644,7 +635,7 @@ Fixpoint stepf (t : tm) : option tm :=
   | _ => None
   end.
 
-Extraction "Stepf.hs" stepf.
+Extraction "Typecheck.hs" type_check stepf.
 
 Theorem value_stepf : forall t,
     value_bool t = true -> stepf t = None.
@@ -783,7 +774,7 @@ Proof.
     apply value_bool_correct in H; rewrite H; apply value_stepf in H. rewrite H. reflexivity.
 Qed.
 
-End StepFunction.
+End TypecheckerExtensions.
 
 
 Module StlcImpl.
