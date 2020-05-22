@@ -10,3 +10,4 @@
 ./morestlc.v
 ./sub.v
 ./typechecking.v
+./records.v
