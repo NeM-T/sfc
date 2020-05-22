@@ -187,6 +187,9 @@ Definition manual_grade_for_type_checking_sound : option (nat*string) := None.
 Definition manual_grade_for_type_checking_complete : option (nat*string) := None.
 Import morestlc.
 Import STLCExtended.
+Require Coq.extraction.Extraction.
+Extraction Language Haskell.
+
 
 Fixpoint eqb_ty (T1 T2 : ty) : bool :=
   match T1,T2 with
@@ -340,6 +343,7 @@ Fixpoint type_check (Gamma : context) (t : tm) : option ty :=
     end
   end.
 
+Extraction "Typecheck.hs" type_check.
 
 Ltac invert_typecheck Gamma t T :=
   remember (type_check Gamma t) as TO;
@@ -479,6 +483,8 @@ End TypecheckerExtensions.
 Module StepFunction.
 Import morestlc.
 Import STLCExtended.
+Require Coq.extraction.Extraction.
+Extraction Language Haskell.
 
 Fixpoint value_bool (t: tm) : bool :=
   match t with
@@ -637,6 +643,8 @@ Fixpoint stepf (t : tm) : option tm :=
     end
   | _ => None
   end.
+
+Extraction "Stepf.hs" stepf.
 
 Theorem value_stepf : forall t,
     value_bool t = true -> stepf t = None.
