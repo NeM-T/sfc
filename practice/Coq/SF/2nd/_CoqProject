@@ -11,3 +11,4 @@
 ./sub.v
 ./typechecking.v
 ./records.v
+./references.v
