@@ -833,6 +833,30 @@ Proof.
   apply ST_Test; eauto. auto. 
 Qed.
 
+Lemma multistep_pair1 : forall t1 t1' t2, 
+  (t1 -->* t1') -> (pair t1 t2) -->* (pair t1' t2).
+Proof.
+  intros. induction H.
+  auto. eapply multi_step. apply ST_Pair1. apply H.
+  auto.
+Qed.
+
+Lemma multistep_pair2 : forall t1 t2' t2,
+    value t1 -> t2 -->* t2' -> (pair t1 t2) -->* (pair t1 t2').
+Proof.
+  intros. induction H0.
+  auto. eapply multi_step. apply ST_Pair2. apply H.
+  apply H0.
+  auto.
+Qed.
+
+Lemma multistep_pair : forall t1 t1' t2 t2', 
+  (t1 -->* t1') -> (value t1') -> (t2 -->* t2') -> (pair t1 t2) -->* (pair t1' t2').
+Proof.
+  intros. induction H. destruct H1. auto. eapply multi_step.
+  apply ST_Pair2. assumption. apply H. apply multistep_pair2. assumption. assumption.
+  eapply multi_step. apply ST_Pair1. apply H. apply IHmulti in H0. assumption.
+Qed.
 
 (* メインの補題 *)
 
@@ -899,8 +923,15 @@ Proof.
     generalize V; intro VV.
     apply IHHT1 with (env0:= env0) in V; try assumption.
     apply IHHT2 with (env0:= env0) in VV; try assumption.
-    admit.
+    pose proof (R_halts V) as V0; pose proof (R_halts VV) as VV0.
+    apply R_typable_empty in V.
+    apply R_typable_empty in VV.
+    destruct V0 as [v [V1 V2]]. destruct VV0 as [vv [VV1 VV2]].
 
+    split. constructor; assumption.
+    split. unfold halts. exists (pair v vv). split. apply multistep_pair; assumption.
+    constructor; assumption.
+    admit.
 
   -
     apply IHHT with (env0:= env0) in H.
