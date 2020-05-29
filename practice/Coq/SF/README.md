@@ -34,3 +34,23 @@ rename... into...: 証明コンテキストの仮定の名前を変更します�
 assumption: ゴールにちょうどマッチする仮定Hをコンテキストから探そうとします。 発見されたときは apply H と同様に振る舞います。   
 contradiction: Falseと同値の仮定Hをコンテキストから探そうとします。 発見されたときはゴールを解きます。  
 constructor: 現在のゴールを解くのに使えるコンストラクタcを（現在の環境のInductiveによる定義から）探そうとします。 発見されたときは apply c と同様に振る舞います。  
+
+
+## 拡張tactics
+SSReflect は強力なタクティックを提供する別のパッケージです。 ライブラリ"LibTactics"は"SSReflect"と次の2点で異なります:  
+* "SSReflect"は主として数学の定理を証明するために開発されました。 一方、"LibTactics"は主としてプログラミング言語の定理の証明のために開発されました。 特に"LibTactics"は、"SSReflect"パッケージには対応するものがない、 いくつもの有用なタクティックを提供します。
+* "SSReflect"はタクティックの提示方法を根底から考え直しています。 一方、"LibTactics"はCoqタクティックの伝統的提示方法をほとんど崩していません。 このことからおそらく"LibTactics"の方が"SSReflect"よりとっつきやすいと思われます。
+
+[ソフトウェアの基礎](https://www.chiguri.info/sfja/plf/UseTactics.html)からLibTacticsの概要を転載  
+* inversionの名前付けをよりよくするintrovとinverts。
+* 証明できないゴールを捨てやすくするfalseとtryfalse。
+* 先頭の定義を展開する（unfoldする）unfolds。
+* 帰納法の状況を整えやすくするgen。
+* 場合分けをよりよくするcasesとcases_if。
+* n-引数コンストラクタを扱うsplitsとbranch。
+* 等価性を扱いやすくするasserts_rewrite、cuts_rewrite、substs、fequals。
+* 補題の具体化と使用方法を表現するlets、forwards、specializes、applys。
+* 補題を適用する前に行う書き換えを自動化するapplys_eq。
+* 柔軟に集中、無視するサブゴールを選ぶadmits、admit_rewrite、admit_goal。
+
+もし LibTactics.v を自分の作る証明に使いたい場合は、 http://www.chargueraud.org/softs/tlc/ から最新版を取得してください。  
