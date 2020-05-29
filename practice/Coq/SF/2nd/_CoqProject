@@ -13,3 +13,4 @@
 ./records.v
 ./references.v
 ./recordsub.v
+./norm.v
