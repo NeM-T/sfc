@@ -17,3 +17,4 @@
 ./libtactics.v
 ./usetactics.v
 ./useauto.v
+./pe.v
