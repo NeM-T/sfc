@@ -14,11 +14,10 @@ type term =
 
 val isnumericval : term -> bool
 
+val isval : term -> bool
+
 type optiont =
 | Some of term
-| Value of term
 | None
 
 val eval1 : term -> optiont
-
-val bstep : term -> optiont
