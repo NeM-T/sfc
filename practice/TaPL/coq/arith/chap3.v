@@ -643,10 +643,68 @@ Proof.
     apply Ee_IsZero; auto.
 Qed.
 
+Lemma succtrans : forall t1 t1',
+    t1 -->* t1' -> succ t1 -->* succ t1'.
+Proof.
+  intros. induction H.
+  apply multi_refl.
+  eapply multi_step. apply Ee_Succ. apply H. apply IHmulti.
+Qed.
+
+Lemma predtrans : forall t1 t1',
+    t1 -->* t1' -> pred t1 -->* pred t1'.
+Proof.
+  intros. induction H.
+  apply multi_refl.
+  eapply multi_step. apply Ee_Pred; eassumption. auto.
+Qed.
+
+Lemma iszerotrans : forall t1 t1',
+    t1 -->* t1' -> iszero t1 -->* iszero t1'.
+Proof.
+  intros. induction H.
+  apply multi_refl.
+  eapply multi_step. apply Ee_IsZero. apply H. auto.
+Qed.
+
+
+Lemma estepor: forall t1 t1',
+    t1 --> t1' -> t1 -->o t1' \/ t1 -->* wrong.
+Proof.
+  induction t1; intros; try solve_by_invert.
+  -
+    inversion H; subst.
+    left. apply E_IfTrue.
+    left. apply E_IfFalse.
+    apply IHt1_1 in H4; inversion H4.
+    left. apply E_If; auto.
+    apply Iftrans with (t2:= t1_2) (t3:=t1_3) in H0.
+    right. eapply multitrans. apply H0. eapply multi_step. apply Ee_IfWrong. apply bb_wrong. apply multi_refl.
+    right. eapply multi_step. apply H. apply multi_refl.
+  -
+    inversion H; subst. apply IHt1 in H1. inversion H1.
+    left. apply E_Succ; auto.
+    apply succtrans in H0. right. eapply multitrans. apply H0. eapply multi_step. apply E_SuccWrong. apply bn_wrong. apply multi_refl.
+    right. eapply multi_step. apply H. apply multi_refl.
+  -
+    inversion H; subst.
+    left. apply E_PredZero. left. apply E_PredSucc; auto.
+    apply IHt1 in H1. inversion H1. left. apply E_Pred; auto.
+    right. apply predtrans in H0. eapply multitrans. apply H0. eapply multi_step. apply Ee_PredWrong. apply bn_wrong. apply multi_refl.
+    right. eapply multi_step. apply Ee_PredWrong; auto. apply multi_refl.
+  -
+    inversion H; subst.
+    left. apply E_IsZeroZero. left. apply E_IsZeroSucc; auto.
+    apply IHt1 in H1. inversion H1.
+    left. apply E_IsZero; auto.
+    right. apply iszerotrans in H0. eapply multitrans. apply H0. eapply multi_step. apply Ee_IsZeroWrong. apply bn_wrong. apply multi_refl.
+    right. eapply multi_step. apply Ee_IsZeroWrong; auto. apply multi_refl.
+Qed.
+
+
 Lemma A4If : forall t1 t2 t3,
     (Good (If t1 t2 t3)) = true -> stop (If t1 t2 t3) -> (If t1 t2 t3) -->* wrong.
 Proof.
-  intros. generalize dependent t3. generalize dependent t2. generalize dependent t1.
   induction t1; intros.
   -
     inversion H0. induction H2. exists t2; apply E_IfTrue.
@@ -686,7 +744,11 @@ Proof.
     eapply multi_step. apply Ee_If. apply E_SuccWrong. apply bn_fls.
     eapply multi_step. apply Ee_IfWrong. apply bb_wrong. apply multi_refl.
 
-    induction H0. exists (succ t1'). apply E_Succ; auto. admit.
+    apply estepor in H8. inversion H8.
+    induction H0. exists (succ t1'). apply E_Succ; auto.
+    apply succtrans in H4. apply Iftrans with (t2:= t2)(t3:= t3) in H4.
+    eapply multitrans. apply H4. eapply multi_step. apply Ee_If. apply E_SuccWrong. apply bn_wrong.
+    eapply multi_step. apply Ee_IfWrong. apply bb_wrong. apply multi_refl.
 
     inversion H8; subst.
     eapply multi_step. apply Ee_IfWrong. apply bb_nat; apply nv_S; auto. apply multi_refl.
@@ -694,27 +756,84 @@ Proof.
     apply bb_wrong. apply multi_refl.
 
     split; intro HH; inversion HH; try solve_by_invert.
-    inversion H1. admit.
+    admit.
+
+    inversion H. apply andb_prop in H3. inversion H3. apply andb_prop in H4. inversion H4.
+    inversion IHH. rewrite H2 in H8. rewrite H5 in H8. rewrite H6 in H8. inversion H8.
+
+  -
+    destruct (Good (If t1 t2 t3)) eqn:IHH.
+    apply IHt1 in IHH.
+    inversion IHH; subst.
+
+    inversion H1; subst.
+    eapply multi_step. apply Ee_If. apply Ee_PredWrong. apply bn_tru.
+    eapply multi_step. apply Ee_IfWrong. apply bb_wrong. apply multi_refl.
+
+    eapply multi_step. apply Ee_If. apply Ee_PredWrong. apply bn_fls.
+    eapply multi_step. apply Ee_IfWrong. apply bb_wrong. apply multi_refl.
+
+    apply estepor in H7. inversion H7.
+    inversion  H0. induction H5.
+    exists (If (pred t1') t2 t3). apply E_If. apply E_Pred; auto.
+    apply predtrans in H3. apply Iftrans with (t2:= t2)(t3:= t3) in H3.
+    eapply multitrans. apply H3. eapply multi_step. apply Ee_If. apply Ee_PredWrong. apply bn_wrong.
+    eapply multi_step. apply Ee_IfWrong. apply bb_wrong. apply multi_refl.
+
+    inversion H7; subst.
+    inversion H3; subst.
+    eapply multi_step. apply Ee_If. apply Ee_PredZero. eapply multi_step. apply H1. apply multi_refl.
+    eapply multi_step. apply Ee_If. apply Ee_PredSucc; auto. eapply multi_step. apply Ee_IfWrong; apply bb_nat; auto. apply multi_refl.
+
+    eapply multi_step. apply Ee_If; apply Ee_PredWrong. apply bn_wrong. eapply multi_step. apply Ee_IfWrong.
+    apply bb_wrong. apply multi_refl.
+
+    split; intro HH; inversion HH; try solve_by_invert.
+    admit.
+
+    inversion H. apply andb_prop in H2. inversion H2. apply andb_prop in H3. inversion H3.
+    inversion IHH. rewrite H1 in H7. rewrite H4 in H7. rewrite H5 in H7. inversion H7.
+  -
+    destruct (Good (If t1 t2 t3))eqn:IHH.
+    apply IHt1 in IHH.
+    inversion IHH; subst.
+    inversion H1; subst.
+
+    eapply multi_step. apply Ee_If. apply Ee_IsZeroWrong. apply bn_tru. eapply multi_step. apply Ee_IfWrong. apply bb_wrong. apply multi_refl.
+
+    eapply multi_step. apply Ee_If. apply Ee_IsZeroWrong. apply bn_fls. eapply multi_step. apply Ee_IfWrong. apply bb_wrong. apply multi_refl.
+
+    apply estepor in H7. inversion H7.
+    inversion H0. induction H5. exists (If (iszero t1') t2 t3). apply E_If. apply E_IsZero; auto.
+    apply iszerotrans in H3. apply Iftrans with (t2:= t2) (t3:= t3) in H3. eapply multitrans.
+    apply H3. eapply multi_step. apply Ee_If. apply Ee_IsZeroWrong. apply bn_wrong. eapply multi_step. apply Ee_IfWrong. apply bb_wrong. apply multi_refl.
 
     admit.
-  -
-Abort.
 
+    split; intro HH; inversion HH. inversion H1.
+    admit.
+
+    inversion H. apply andb_prop in H2. inversion H2. apply andb_prop in H3. inversion H3.
+    inversion IHH. rewrite H1 in H7. rewrite H4 in H7. rewrite H5 in H7; inversion H7.
+  -
+    inversion H.
+Abort.
 
 
 Lemma A4: forall t1,
     (Good t1) = true -> stop t1 -> t1 --> wrong.
-Proof.
+Proof with eauto.
   induction t1; intros.
   -
-    admit.
+    inversion H0. induction H1. constructor.
+  -
+    inversion H0. induction H1. constructor.
   -
     admit.
   -
-    admit.
+    inversion H0; induction H1; constructor. constructor.
   -
 Abort.
-
 
 Lemma NVstep: forall nv,
     NatValue nv -> not (exists t1', succ nv -->o t1').
