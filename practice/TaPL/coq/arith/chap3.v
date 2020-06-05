@@ -976,13 +976,14 @@ Proof with eauto.
     apply refl.
 Qed.
 
+
 Lemma A5: forall t1 t2,
     Good t1 = true -> Good t2 = false ->
     t1 --> t2 -> stop t1.
 Proof.
   intros. induction H1; try solve_by_invert.
   -
-    try (inversion H; apply andb_prop in H2; inversion H2; rewrite H1 in H0; discriminate H0).
+    inversion H. apply andb_prop in H2. inversion H2. rewrite H1 in H0. discriminate H0.
   -
     inversion H. apply andb_prop in H2. inversion H2. rewrite H3 in H0; discriminate.
   -
@@ -995,7 +996,7 @@ Proof.
     split; intro HH. inversion HH; subst. inversion H2; induction (nv_notstep t1); auto. exists t1'; auto.
     inversion HH. inversion H2; subst. destruct IHestep; auto. induction H5. exists t1'0; auto.
   -
-    inversion H. rewrite H3 in H0. inversion H0. 
+    inversion H. rewrite H3 in H0. inversion H0.
   -
     inversion H. destruct IHestep; auto.
     split; intro HH. inversion HH. inversion H5.
@@ -1025,16 +1026,37 @@ Proof.
       split; intro HH; inversion HH;  try solve_by_inverts 2.
 Qed.
 
-Lemma AA: forall t1,
-    t1 -->* wrong -> stop t1.
+Theorem A2right : forall t1 t1',
+    Good t1 = true -> Good t1' = true ->
+    t1 -->o t1' -> stop t1' -> t1 -->* wrong.
 Proof.
-  induction t1; intros.
+  intros.
+  eapply multi_step. apply stepe in H1. apply H1. apply multievalstep. apply A4. assumption.
+Qed.
+
+Theorem A2left : forall t1 t1',
+    Good t1 = true -> Good t1' = true ->
+    t1 -->o t1' -> t1' --> wrong -> stop t1'.
+Proof.
+  intros. split; intro HH.
+  inversion HH; subst; try solve_by_inverts 2.
+  induction (nv_notstep t1'); auto. exists wrong; auto.
+  inversion HH. inversion H2; subst; try solve_by_invert.
   -
-    inversion H; subst. inversion H0.
+    inversion H0. apply andb_prop in H5. inversion H5. inversion H6.
   -
-    inversion H; subst. inversion H0.
+    inversion H4; subst. inversion H5; subst. inversion H3. inversion H10.
+    inversion H3; subst. inversion H11; subst. induction (nv_notstep nv1); auto. eexists. apply stepe in H8. apply H8.
+    inversion H3; subst. inversion H9.
   -
-Abort.
+    inversion H4; subst; try solve_by_inverts 2.
+  -
+    inversion H4; subst; try solve_by_inverts 2.
+  -
+    inversion H4; subst; try solve_by_inverts 2.
+Qed.
+
+
 
 End ArithNatBad.
 
