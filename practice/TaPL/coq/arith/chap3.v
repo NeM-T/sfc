@@ -701,6 +701,198 @@ Proof.
     right. eapply multi_step. apply Ee_IsZeroWrong; auto. apply multi_refl.
 Qed.
 
+Fixpoint isnumericval (t1: t): bool :=
+  match t1 with
+  | O => true
+  | succ t1 => isnumericval t1
+  | _ => false
+  end.
+
+Fixpoint isval (t1: t) : bool :=
+  match t1 with
+  | tru => true
+  | fls => true
+  | _ => isnumericval t1
+  end.
+
+Definition isbool (t1: t) : bool :=
+  match t1 with
+  | tru => true
+  | fls => true
+  | _ => false
+  end.
+
+Definition isBNat (t1: t) : bool :=
+  match t1 with
+  | wrong => true
+  | _ => isbool t1
+  end.
+
+Definition isBbool (t1: t) : bool :=
+  match t1 with
+  | wrong => true
+  | _ => isnumericval t1
+  end.
+
+
+Inductive optiont : Type :=
+| Some (T: t)
+| None.
+
+
+Fixpoint eval1 (t': t) : optiont :=
+  match t' with
+  | If t1 t2 t3 =>
+    if (isbool t1) then
+      match t1 with
+      | tru => Some t2
+      | fls => Some t3
+      | _ => None
+      end else if (isBbool t1) then Some wrong else
+      match (eval1 t1) with
+      | Some t1' => Some (If t1' t2 t3)
+      | _ => None
+      end
+  | succ t1 =>
+    if isnumericval t1 then
+      None else if (isBNat t1) then Some wrong else
+      match (eval1 t1) with
+      | Some t1' => Some (succ t1')
+      | _ => None
+      end
+  | pred t1 =>
+    if (isnumericval t1) then
+      match t1 with
+      | O => Some O
+      | succ nv1 => Some nv1
+      | _ => None
+      end else if (isBNat t1) then Some wrong else
+      match (eval1 t1) with
+      | Some t1' => Some (pred t1')
+      | _ => None
+      end
+  | iszero t1 =>
+    if (isnumericval t1) then
+      match t1 with
+      | O => Some tru
+      | succ _ => Some fls
+      | _ => None
+      end else if (isBNat t1) then Some wrong else
+      match (eval1 t1) with
+      | Some t1' => Some (iszero t1')
+      | _ => None
+      end
+  | _ => None
+  end.
+
+Lemma isnumericvalCC : forall t1,
+    isnumericval t1 = true <-> NatValue t1.
+Proof.
+  split; intros.
+  induction t1; try solve_by_invert.
+  apply nv_O. inversion H. apply nv_S. apply IHt1; auto.
+  induction H. reflexivity. inversion IHNatValue; auto.
+Qed.
+
+Lemma NVstep: forall nv,
+    NatValue nv -> not (exists t1', succ nv -->o t1').
+Proof.
+  intros. induction H.
+  intro H. inversion H. inversion H0; try solve_by_invert.
+  intro HH. inversion HH. inversion H0; subst.
+  induction IHNatValue. exists t1'; auto.
+Qed.
+
+
+Lemma BBCC : forall t1,
+    isBbool t1 = true <-> BadBool t1.
+Proof.
+  split; intros.
+  induction t1; try solve_by_inverts 2. apply bb_nat. apply nv_O. apply bb_nat. apply nv_S.
+  inversion H. apply isnumericvalCC in H1. auto. apply bb_wrong.
+  induction H; auto. induction H; auto. simpl. apply isnumericvalCC. auto.
+Qed.
+
+Lemma BNCC : forall t1,
+    isBNat t1 = true <-> BadNat t1.
+Proof.
+  split; intros.
+  induction t1; try solve_by_invert. apply bn_tru. apply bn_fls. apply bn_wrong.
+  inversion H; auto.
+Qed.
+
+Lemma eval1OK : forall t1 t1',
+    t1 --> t1' <-> eval1 t1 = Some t1'.
+Proof with eauto.
+  split; intros.
+  -
+    induction H; try reflexivity; simpl.
+    +
+      destruct (isbool t1) eqn:IHb.
+      destruct t1; try solve_by_invert.
+      destruct (isBbool t1) eqn:IHBb.
+      unfold isbool in IHb. unfold isBbool in IHBb.
+      destruct t1; try solve_by_invert.
+      apply isnumericvalCC in IHBb.
+      inversion IHBb; subst.
+      inversion H. subst. induction (nv_notstep t1); auto. exists t1'0. auto.
+      subst. destruct t1; try solve_by_invert.
+      rewrite IHestep. reflexivity.
+    +
+      destruct (isnumericval t1) eqn:IHn.
+      destruct t1; try solve_by_invert. apply isnumericvalCC in IHn.
+      inversion IHn; subst. induction (nv_notstep t1); auto. inversion H; subst. exists t1'0; auto.
+      destruct t1; try solve_by_invert.
+      destruct (isBNat t1) eqn:IHBn. destruct t1; try solve_by_invert.
+      rewrite IHestep; auto.
+    +
+      apply isnumericvalCC in H. rewrite H. auto.
+    +
+      rewrite IHestep. destruct (isnumericval t1) eqn:IHnum. apply isnumericvalCC in IHnum.
+      induction (nv_notstep t1); auto. exists t1'; auto.
+      destruct (isBNat t1) eqn:IHBN. destruct t1; try solve_by_invert.
+      auto.
+    +
+      apply isnumericvalCC in H. rewrite H. auto.
+    +
+      rewrite IHestep. destruct (isnumericval t1) eqn:IHn. destruct t1; try solve_by_invert.
+      inversion H; subst. apply isnumericvalCC in IHn. inversion IHn; subst. induction (nv_notstep t1); auto.
+      exists t1'0; auto.
+      destruct t1; try solve_by_invert.
+      destruct (isBNat t1) eqn:IHB; auto. destruct t1; try solve_by_invert.
+    +
+      destruct (isbool t1) eqn:IHb. destruct t1; try solve_by_inverts 2.
+      apply BBCC in H. rewrite H; auto.
+    +
+      destruct (isnumericval t1) eqn:IHnum. destruct t1; try solve_by_invert.
+      apply BNCC in H. rewrite H. auto.
+    +
+      destruct t1; try solve_by_invert; auto.
+    +
+      destruct t1; try solve_by_invert; auto.
+  -
+    generalize dependent t1'.
+    induction t1; intros; try solve_by_invert.
+    +
+      inversion H. destruct (isbool t1_1) eqn:IHB. destruct t1_1; try solve_by_invert; inversion H1; constructor.
+      induction (isBbool t1_1) eqn:IHBB. inversion H1. apply Ee_IfWrong. apply BBCC in IHBB. auto.
+      induction (eval1 t1_1); inversion H1. apply Ee_If. apply IHt1_1. reflexivity.
+    +
+      inversion H. destruct (isnumericval t1) eqn:IHnum; try solve_by_invert.
+      destruct (isBNat t1) eqn:IHBN. inversion H1. apply E_SuccWrong. apply BNCC; auto.
+      destruct (eval1 t1); inversion H1. apply Ee_Succ. apply IHt1...
+    +
+      inversion H. destruct (isnumericval t1) eqn:IHnum. destruct t1; try solve_by_invert; inversion H1.
+      apply Ee_PredZero. apply Ee_PredSucc. inversion IHnum. subst. apply isnumericvalCC...
+      destruct (isBNat t1) eqn:IHBN. inversion H1. apply Ee_PredWrong. apply BNCC...
+      destruct (eval1 t1); inversion H1. apply Ee_Pred; apply IHt1...
+    +
+      inversion H. destruct (isnumericval t1) eqn:IHn. destruct t1; inversion H1.
+      apply Ee_IsZeroZero. apply Ee_IsZeroSucc. apply isnumericvalCC...
+      destruct (isBNat t1) eqn:IHB; inversion H1. apply Ee_IsZeroWrong. apply BNCC...
+      destruct (eval1 t1); inversion H1. apply Ee_IsZero. apply IHt1...
+Qed.
+
 
 Lemma A4If : forall t1 t2 t3,
     (Good (If t1 t2 t3)) = true -> stop (If t1 t2 t3) -> (If t1 t2 t3) -->* wrong.
@@ -821,28 +1013,63 @@ Abort.
 
 
 Lemma A4: forall t1,
-    (Good t1) = true -> stop t1 -> t1 --> wrong.
+    stop t1 -> t1 --> wrong.
 Proof with eauto.
-  induction t1; intros.
+  induction t1; intros; apply eval1OK; auto.
   -
-    inversion H0. induction H1. constructor.
+    inversion H. induction H0. constructor.
   -
-    inversion H0. induction H1. constructor.
+    inversion H. induction H0. constructor.
   -
+    simpl. destruct (isbool t1_1) eqn:IHB. destruct t1_1; inversion IHB.
+    inversion H. induction H1. exists t1_2. apply E_IfTrue.
+    inversion H. induction H1. exists t1_3. constructor.
+    destruct (isBbool t1_1) eqn:IHBb...
+
+    assert (stop t1_1).
+    split; intro HH. destruct t1_1; try solve_by_inverts 2. inversion HH. apply isnumericvalCC in H0.
+    inversion IHBb. inversion H0. rewrite H3 in H4. inversion H4.
+    inversion HH. inversion H. induction H2. exists (If x t1_2 t1_3). constructor; auto.
+
+    apply IHt1_1 in H0. apply eval1OK in H0. rewrite H0.
     admit.
   -
-    inversion H0; induction H1; constructor. constructor.
+    inversion H. induction H0; constructor. constructor.
   -
+    simpl. destruct (isnumericval t1) eqn:IHnum. inversion H. induction H0. apply v_nat.
+    apply nv_S; apply isnumericvalCC...
+    destruct (isBNat t1) eqn: IHBn...
+
+    assert (stop t1).
+    split; intros HH. destruct t1; try solve_by_inverts 2. inversion HH. apply isnumericvalCC in H0. rewrite H0 in IHnum. inversion IHnum.
+    inversion HH. inversion H. induction H2. exists (succ x). constructor. auto.
+
+    apply IHt1 in H0. apply eval1OK in H0. rewrite H0.
+    admit.
+  -
+    simpl. destruct (isnumericval t1) eqn:IHnum. destruct t1; try solve_by_invert...
+    inversion H. induction H1. exists O. constructor. inversion H. induction H1. exists t1. constructor. apply isnumericvalCC...
+    destruct (isBNat t1) eqn:IHBn...
+
+    assert (stop t1).
+    split; intro HH. destruct t1; try solve_by_inverts 2. inversion HH. apply isnumericvalCC in H0. rewrite IHnum in H0. inversion H0.
+    inversion HH. inversion H. induction H2. exists (pred x); constructor...
+    apply IHt1 in H0. apply eval1OK in H0. rewrite H0.
+    admit.
+  -
+    simpl. destruct (isnumericval t1) eqn:IHnum. destruct t1; try solve_by_invert.
+    inversion H. induction H1. exists tru; constructor. inversion H. induction H1. exists fls. constructor. apply isnumericvalCC...
+    destruct (isBNat t1) eqn:BN...
+    assert (stop t1).
+    split; intro HH. destruct t1; try solve_by_inverts 2. inversion HH. apply isnumericvalCC in H0. rewrite H0 in IHnum. inversion IHnum.
+    inversion HH. inversion H. induction H2. exists (iszero x). constructor...
+    apply IHt1 in H0. apply eval1OK in H0. rewrite H0.
+  admit.
+  -
+    inversion H.
+    admit.
 Abort.
 
-Lemma NVstep: forall nv,
-    NatValue nv -> not (exists t1', succ nv -->o t1').
-Proof.
-  intros. induction H.
-  intro H. inversion H. inversion H0; try solve_by_invert.
-  intro HH. inversion HH. inversion H0; subst.
-  induction IHNatValue. exists t1'; auto.
-Qed.
 
 Lemma A5: forall t1 t2,
     Good t1 = true -> Good t2 = false ->
