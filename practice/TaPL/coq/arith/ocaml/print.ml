@@ -16,11 +16,22 @@ let rec manyeval t1 =
   | Some t1' -> manyeval t1'
   | _        -> t1
 
-let mm =
-  Printexc.print (fun () ->
+let get () =
+    while true do
       let lexbuf = Lexing.from_channel stdin in
-      while true do
-        let result = Parser.toplevel Lexer.main lexbuf in
-        print_string (eval_string (manyeval result)); print_newline()
-      done
-    ) ()
+      let result = Parser.toplevel Lexer.main lexbuf in
+      print_string (eval_string (manyeval result)); print_newline()
+    done
+
+
+let () =
+  match (Array.length Sys.argv) with
+    1 -> get ()
+  | _ ->
+      let file = Sys.argv.(1) in
+      let oc   = open_in file in
+      let line = try input_line oc with End_of_file -> close_in oc; "End" in
+      let lexbuf = Lexing.from_string line in 
+      let result = Parser.toplevel Lexer.main lexbuf in
+      print_string (eval_string (manyeval result)); print_newline()
+
