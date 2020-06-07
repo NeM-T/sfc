@@ -14,11 +14,12 @@ let rec wr fd bf =
       wr fd bf
 
 
-let rec rwwhile n file =
+let rec rwwhile n  =
+  let file = Sys.argv.(argc - n)  in
   let fd = openfile file [O_RDONLY] 0o640 in
   let _ = wr fd buf in
   let () = close fd in
   if n <= 1 then None else
-      rwwhile (n - 1) Sys.argv.(argc - n + 1)
+      rwwhile (n - 1)
 
-let op = rwwhile (argc - 1) Sys.argv.(1)
+let _ = rwwhile (argc - 1)
