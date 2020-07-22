@@ -1,4 +1,4 @@
-\documentclass[fleqn,a4j,10pt]{jsarticle}
+\documentclass[a4j,10pt,fleqn]{jsarticle}
 \usepackage{layout,url,resume}
 \usepackage[dvipdfmx]{graphicx}
 \usepackage{mathpartir}
@@ -215,8 +215,6 @@ tを評価するとt'となること(1ステップ評価) を $t \longrightarrow
     \UnaryInfC {$iszero$ $t1 \colon Bool$}
 \end{prooftree}
 
-\bibliographystyle{junsrt}
-\bibliography{resume}
 
 \subsection *{証明済みの性質}
 型付け規則の健全性は進行定理と保存定理によって証明を行った.\\
@@ -242,6 +240,7 @@ tを評価するとt'となること(1ステップ評価) を $t \longrightarrow
 Coqの正しさを保証しているCICとZFCの互換性について理解をしたいので数学基礎論の知識をつける予定である.\par
 Coqは可読性が低いので他の証明支援系を使うことも検討する.そのために,Agdaを少し触れたい.\par
 
+\bibliographystyle{junsrt}
 \begin{thebibliography}{}
 \bibitem{TaPL} オーム社／Benjamin C. Pierce 著、住井 英二郎 監訳、遠藤 侑介 訳、酒井 政裕 訳、今井 敬吾 訳、黒木 裕介 訳、今井 宜洋 訳、才川隆文 訳、今井 健男 訳 https://www.ohmsha.co.jp/book/9784274069116/
 \bibitem{SF} 「型システム入門」の作者Benjamin C. Pierce氏などによって継続的にメンテナンスされているCoqの教科書.\\
