@@ -87,24 +87,24 @@ Coqで記述・証明した関数を他の言語に変換するExtranctionとい
 \end{eqnarray*}
 
 \section {評価規則}
-tを評価するとt'となること(1ステップ評価) を $t \longrightarrow t'$と書く.また,評価の反射的推移的閉包(多ステップ評価)を $\longrightarrow*$ で表す.\\
+tを評価するとt'となること(1ステップ評価) を $t \longrightarrow t'$と表す.また,評価の反射的推移的閉包(多ステップ評価)を $\longrightarrow*$ で表す.\\
 
 \begin{prooftree}
     \AxiomC {$t1 \longrightarrow t1'$}
     \RightLabel {(E_If)}
-    \UnaryInfC {$if$ $t1$ $t2$ $t3 \longrightarrow if$ $t1'$ $t2$ $t3$}
+    \UnaryInfC {$if$ $t1$ $then$ $t2$ $else$ $t3 \longrightarrow if$ $t1'$ $then$ $t2$ $else$ $t3$}
 \end{prooftree}
 
 \begin{prooftree}
     \AxiomC {}
     \RightLabel {(E_IfTrue)}
-    \UnaryInfC {$if$ $true$ $t2$ $t3 \longrightarrow t2$}
+    \UnaryInfC {$if$ $true$ $then$ $t2$ $else$ $t3 \longrightarrow t2$}
 \end{prooftree}
 
 \begin{prooftree}
     \AxiomC {}
     \RightLabel {(E_IfFalse)}
-    \UnaryInfC {$if$ $false$ $t2$ $t3 \to t3$}
+    \UnaryInfC {$if$ $false$ $then$ $t2$ $else$ $t3 \to t3$}
 \end{prooftree}
 
 \begin{prooftree}
@@ -171,7 +171,7 @@ tを評価するとt'となること(1ステップ評価) を $t \longrightarrow
 その他,大ステップ評価を定義し,意味論の一致なども証明した.\\
 
 \section{型付け規則}
-項tが型Tに型付けされることを $t \colon T$ と書く.\\
+項tが型Tに型付けされることを $t \colon T$ と表す.\\
 
 \begin{prooftree}
     \AxiomC {}
@@ -188,7 +188,7 @@ tを評価するとt'となること(1ステップ評価) を $t \longrightarrow
 \begin{prooftree}
     \AxiomC {$t1 \colon Bool$  $t2 \colon T$ $t3 \colon T$}
     \RightLabel {(T_If)}
-    \UnaryInfC {$if$ $t1$ $t2$ $t3 \colon T$}
+    \UnaryInfC {$if$ $t1$ $then$ $t2$ $else$ $t3 \colon T$}
 \end{prooftree}
 
 \begin{prooftree}
@@ -240,7 +240,7 @@ tを評価するとt'となること(1ステップ評価) を $t \longrightarrow
 \section{今後}
 「型システム入門」の形式化を進めて,来学期には型推論器の形式化を終えたい.\par
 Coqの正しさを保証しているCICとZFCの互換性について理解をしたいので数学基礎論の知識をつける予定である.\par
-Coqは可読性が低いので他の証明支援系を使うことも検討する.そのためにもAgdaを少し触れたい.\par
+Coqは可読性が低いので他の証明支援系を使うことも検討する.そのために,Agdaを少し触れたい.\par
 
 \begin{thebibliography}{}
 \bibitem{TaPL} オーム社／Benjamin C. Pierce 著、住井 英二郎 監訳、遠藤 侑介 訳、酒井 政裕 訳、今井 敬吾 訳、黒木 裕介 訳、今井 宜洋 訳、才川隆文 訳、今井 健男 訳 https://www.ohmsha.co.jp/book/9784274069116/
