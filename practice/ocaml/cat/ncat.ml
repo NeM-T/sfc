@@ -17,8 +17,8 @@ let rec wr fd bf =
 let rec rwwhile n  =
   let file = Sys.argv.(argc - n)  in
   let fd = openfile file [O_RDONLY] 0o640 in
-  let () = wr fd buf in
-  let () = close fd in
+  wr fd buf;
+  close fd;
   if n <= 1 then () else
       rwwhile (n - 1)
 
