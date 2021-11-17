@@ -1,7 +1,7 @@
 %%
 %eop EOF
 %pos int
-%term ID of int | ABS | EOF | LPAREN | RPAREN 
+%term ID of int | ABS | EOF | LPAREN | RPAREN
 %nonterm AExpr of Def.term | AppExpr of Def.term |Expr of Def.term | START of Def.term
 
 %name Lambda

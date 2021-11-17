@@ -19,7 +19,7 @@ ws = [\ \t\n];
 %%
 
 {ws}+ => (lex());
-"\." => (Tokens.ABS(!pos, !pos));
+"fun" => (Tokens.ABS(!pos, !pos));
 "("  => (Tokens.LPAREN(!pos, !pos));
 ")"  => (Tokens.RPAREN(!pos, !pos));
 {digit}+ => (Tokens.ID ((foldl (fn(a, r)=> (ord(a)-ord(#"0")) + 10*r) 0 (explode yytext)), !pos, !pos));
