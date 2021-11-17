@@ -1,0 +1,25 @@
+%%
+%eop EOF
+%pos int
+%term ID of int | ABS | EOF | LPAREN | RPAREN 
+%nonterm AExpr of Def.term | AppExpr of Def.term |Expr of Def.term | START of Def.term
+
+%name Lambda
+
+%noshift EOF
+%nodefault
+
+%%
+
+START : Expr (Expr)
+
+Expr : ABS Expr (Def.Abs Expr)
+| AppExpr (AppExpr)
+
+
+AppExpr: AppExpr AExpr ( Def.App (AppExpr, AExpr) )
+| AExpr (AExpr)
+
+AExpr:
+  ID (Def.Var ID)
+| LPAREN Expr RPAREN (Expr)
